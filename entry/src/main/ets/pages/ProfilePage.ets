@@ -199,26 +199,19 @@ export struct ProfilePage {
         this.loginCard()
       }
 
-      Blank().height(16)
+      Blank().height(14)
 
-      Text("个性化")
-        .fontSize(13)
-        .fontColor("#999999")
-        .width("100%")
-        .padding({ left: 4, bottom: 8 })
-
-      Column({ space: 1 }) {
-        this.settingRow("更换壁纸", this.wallpaperUri.length > 0 ? "已设置" : "未设置", () => {
-          this.pickWallpaper();
-        })
-        this.settingRow("清除壁纸", "恢复纯色背景", () => {
-          this.clearWallpaper();
+      // 设置入口
+      Column() {
+        this.settingRow("设置", "头像、昵称、个性化", () => {
+          router.pushUrl({ url: "pages/SettingsPage" });
         })
       }
       .borderRadius(22)
       .clip(true)
       .shadow({ radius: 18, color: "#0F000000", offsetY: 6 })
-      .margin({ left: 16, right: 16 })
+
+      Blank().height(16)
 
       if (this.message.length > 0) {
         Text(this.message)
