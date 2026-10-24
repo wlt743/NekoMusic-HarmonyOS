@@ -1,6 +1,7 @@
 import { HttpClient } from '../services/HttpClient';
 import { AuthService } from '../services/AuthService';
 import { router } from '@kit.ArkUI';
+import { pasteboard } from '@kit.BasicServicesKit';
 
 interface VipPriceItem {
   id: number;
@@ -86,6 +87,19 @@ struct VipPage {
       this.message = err.message;
     } finally {
       this.paying = false;
+    }
+  }
+
+  copyPayUrl(): void {
+    if (this.payUrl.length === 0) {
+      return;
+    }
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, this.payUrl);
+      pasteboard.getSystemPasteboard().setData(data);
+      this.message = '链接已复制';
+    } catch (error) {
+      this.message = '复制失败';
     }
   }
 
@@ -235,34 +249,52 @@ struct VipPage {
               .fontWeight(FontWeight.Medium)
               .fontColor('#1A1A1A')
 
+            // 支付链接（二维码上方）
+            if (this.payUrl.length > 0) {
+              Column({ space: 6 }) {
+                Text('支付链接')
+                  .fontSize(10)
+                  .fontColor('#999999')
+                Text(this.payUrl)
+                  .fontSize(10)
+                  .fontColor('#666666')
+                  .maxLines(2)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .textAlign(TextAlign.Center)
+                Button('复制链接')
+                  .fontSize(12)
+                  .height(30)
+                  .borderRadius(15)
+                  .backgroundColor('#F2F2F5')
+                  .fontColor('#666666')
+                  .onClick(() => {
+                    this.copyPayUrl();
+                  })
+              }
+              .width('100%')
+              .padding(10)
+              .backgroundColor('#F7F7FA')
+              .borderRadius(12)
+            }
+
+            // 二维码：优先用后端图片，否则用链接本地渲染
             if (this.payImage.length > 0) {
               Image(this.payImage)
                 .width(220)
                 .height(220)
                 .objectFit(ImageFit.Contain)
-            } else if (this.payQr.length > 0) {
-              Column({ space: 8 }) {
-                Text('二维码内容：')
-                  .fontSize(12)
-                  .fontColor('#999999')
-                Text(this.payQr)
-                  .fontSize(11)
-                  .fontColor('#333333')
-                  .maxLines(4)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-              }
-              .padding(12)
-              .backgroundColor('#F2F2F5')
-              .borderRadius(12)
             } else if (this.payUrl.length > 0) {
-              Text('支付链接已生成，请在浏览器中打开')
-                .fontSize(13)
-                .fontColor('#666666')
-              Text(this.payUrl)
-                .fontSize(10)
-                .fontColor('#999999')
-                .maxLines(3)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
+              QRCode(this.payUrl)
+                .width(220)
+                .height(220)
+                .color(Color.Black)
+                .backgroundColor(Color.White)
+            } else if (this.payQr.length > 0) {
+              QRCode(this.payQr)
+                .width(220)
+                .height(220)
+                .color(Color.Black)
+                .backgroundColor(Color.White)
             } else {
               Text('未获取到支付信息')
                 .fontSize(13)
