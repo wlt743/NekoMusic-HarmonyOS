@@ -48,7 +48,7 @@ export struct DiscoverPage {
   @Builder
   resultRow(item: MusicItem) {
     Row({ space: 12 }) {
-      RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 10 })
+      RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 14 })
         .width(56)
         .height(56)
 
@@ -72,7 +72,9 @@ export struct DiscoverPage {
         .fontColor(["#C7C7CC"])
     }
     .width("100%")
-    .padding({ top: 8, bottom: 8 })
+    .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+    .backgroundColor("#FFFFFF")
+    .borderRadius(16)
     .onClick(() => {
       this.openPlayer(item);
     })
@@ -84,9 +86,11 @@ export struct DiscoverPage {
       Row({ space: 10 }) {
         Search({ value: this.keyword, placeholder: "搜索歌曲、歌手" })
           .layoutWeight(1)
-          .height(44)
-          .backgroundColor("#EFEFF2")
+          .height(46)
+          .backgroundColor("#F2F2F6")
           .placeholderColor("#999999")
+          .borderRadius(23)
+          .placeholderFont({ size: 14 })
           .onChange((value: string) => {
             this.keyword = value;
           })
@@ -97,7 +101,8 @@ export struct DiscoverPage {
           })
 
         Button("搜索")
-          .height(40)
+          .height(42)
+          .borderRadius(21)
           .fontSize(14)
           .backgroundColor("#E5484D")
           .onClick(() => {
@@ -135,7 +140,6 @@ export struct DiscoverPage {
         .width("100%")
         .layoutWeight(1)
         .padding({ left: 16, right: 16 })
-        .divider({ strokeWidth: 0.5, color: "#EEEEEE", startMargin: 68, endMargin: 0 })
       }
     }
     .width("100%")

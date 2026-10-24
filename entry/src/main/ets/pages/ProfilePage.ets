@@ -84,21 +84,24 @@ export struct ProfilePage {
 
       TextInput({ placeholder: "邮箱", text: this.email })
         .type(InputType.Email)
-        .height(44)
+        .height(46)
+        .borderRadius(14)
         .onChange((value: string) => {
           this.email = value;
         })
 
       TextInput({ placeholder: "密码", text: this.password })
         .type(InputType.Password)
-        .height(44)
+        .height(46)
+        .borderRadius(14)
         .onChange((value: string) => {
           this.password = value;
         })
 
       Button(this.loggingIn ? "登录中…" : "登录")
         .width("100%")
-        .height(44)
+        .height(46)
+        .borderRadius(23)
         .backgroundColor("#E5484D")
         .enabled(!this.loggingIn)
         .onClick(() => {
@@ -106,9 +109,10 @@ export struct ProfilePage {
         })
     }
     .width("100%")
-    .padding(16)
+    .padding(20)
     .backgroundColor("#FFFFFF")
-    .borderRadius(16)
+    .borderRadius(22)
+    .shadow({ radius: 18, color: "#0F000000", offsetY: 6 })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -137,9 +141,10 @@ export struct ProfilePage {
         })
     }
     .width("100%")
-    .padding(16)
+    .padding(20)
     .backgroundColor("#FFFFFF")
-    .borderRadius(16)
+    .borderRadius(22)
+    .shadow({ radius: 18, color: "#0F000000", offsetY: 6 })
   }
 
   build() {
@@ -169,8 +174,9 @@ export struct ProfilePage {
           this.clearWallpaper();
         })
       }
-      .borderRadius(16)
+      .borderRadius(22)
       .clip(true)
+      .shadow({ radius: 18, color: "#0F000000", offsetY: 6 })
       .margin({ left: 16, right: 16 })
 
       if (this.message.length > 0) {
