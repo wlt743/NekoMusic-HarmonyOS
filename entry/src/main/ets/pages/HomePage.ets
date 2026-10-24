@@ -119,7 +119,7 @@ export struct HomePage {
             .fontColor(["#1A1A1A"])
         }
         .width("100%")
-        .padding({ left: 16, right: 16, top: 24, bottom: 8 })
+        .padding({ left: 16, right: 16, top: 56, bottom: 8 })
         .systemMaterial(MaterialService.header())
 
         if (this.loading) {

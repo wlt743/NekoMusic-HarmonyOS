@@ -1,6 +1,7 @@
 import { WallpaperService } from "../services/WallpaperService";
 import { MaterialService } from "../services/MaterialService";
 import { AuthService, NekoUser } from "../services/AuthService";
+import { FavoriteService } from '../services/FavoriteService';
 
 @Component
 export struct ProfilePage {
@@ -21,6 +22,7 @@ export struct ProfilePage {
     this.message = "";
     try {
       await AuthService.login(this.email.trim(), this.password);
+      await FavoriteService.refresh();
       this.password = "";
       this.message = "登录成功";
     } catch (error) {
@@ -146,7 +148,7 @@ export struct ProfilePage {
         Text("我的").fontSize(30).fontWeight(FontWeight.Bold).fontColor("#1A1A1A")
       }
       .width("100%")
-      .padding({ left: 16, right: 16, top: 24, bottom: 8 })
+      .padding({ left: 16, right: 16, top: 56, bottom: 8 })
       .systemMaterial(MaterialService.header())
 
       Blank().height(12)

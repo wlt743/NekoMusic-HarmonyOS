@@ -1,6 +1,7 @@
 import { HttpClient } from "./HttpClient";
 import { APIConfig } from "./APIConfig";
 import { AuthService } from "./AuthService";
+import { hilog } from '@kit.PerformanceAnalysisKit';
 
 interface FavoriteApiResponse {
   success: boolean;
@@ -31,8 +32,9 @@ export class FavoriteService {
       if (favorites !== undefined) {
         for (const item of favorites) {
           const record = item as Record<string, Object>;
+          // 后端 favorites 直接返回音乐对象：id 就是 musicId
           const music = record.music as Record<string, Object> | undefined;
-          const id = record.musicId ?? (music !== undefined ? music.id : undefined);
+          const id = record.musicId ?? record.id ?? (music !== undefined ? music.id : undefined);
           if (typeof id === "number") {
             ids.push(id);
           }
@@ -52,11 +54,13 @@ export class FavoriteService {
     }
     const token: string = AuthService.token();
     const wasFavorite: boolean = FavoriteService.isFavorite(musicId);
+    hilog.info(0x0000, 'NekoFav', 'toggle wasFavorite=%{public}s', wasFavorite ? 'true' : 'false');
     if (wasFavorite) {
       await HttpClient.delete(APIConfig.removeFavoriteURL(musicId), token);
     } else {
       await HttpClient.post(APIConfig.favoritesURL(), JSON.stringify({ musicId: musicId }), token);
     }
+    hilog.info(0x0000, 'NekoFav', 'api ok, updating local state');
     const next: number[] = FavoriteService.ids();
     if (wasFavorite) {
       const index: number = next.indexOf(musicId);

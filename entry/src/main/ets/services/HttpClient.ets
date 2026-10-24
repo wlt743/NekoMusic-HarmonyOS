@@ -1,6 +1,7 @@
 import { http } from "@kit.NetworkKit";
 import { APIConfig } from "./APIConfig";
 import { NonceService } from "./NonceService";
+import { hilog } from '@kit.PerformanceAnalysisKit';
 
 /**
  * 统一网络层：
@@ -43,6 +44,8 @@ export class HttpClient {
         header["X-Neko-Nonce"] = nonce;
       }
 
+      hilog.info(0x0000, 'NekoHttp', 'request %{public}s %{public}s body=%{public}s',
+        method, url.substring(0, 60), body.length > 0 ? body.substring(0, 80) : "(empty)");
       const request: http.HttpRequest = http.createHttp();
       try {
         const response: http.HttpResponse = await request.request(url, {
@@ -55,6 +58,8 @@ export class HttpClient {
         });
         const code: number = response.responseCode;
         const text: string = (response.result as string) ?? "";
+        hilog.info(0x0000, 'NekoHttp', 'response code=%{public}d body=%{public}s', code,
+          text.length > 120 ? text.substring(0, 120) : text);
 
         if (code === 409 && attempt === 0) {
           continue;

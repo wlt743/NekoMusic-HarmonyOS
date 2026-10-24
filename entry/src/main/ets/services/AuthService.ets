@@ -1,4 +1,5 @@
 import { preferences } from "@kit.ArkData";
+import { hilog } from "@kit.PerformanceAnalysisKit";
 import { common } from "@kit.AbilityKit";
 import { HttpClient } from "./HttpClient";
 import { APIConfig } from "./APIConfig";
@@ -34,7 +35,13 @@ export class AuthService {
     AuthService.store = await preferences.getPreferences(context, "nekomusic_auth");
     const token = await AuthService.store.get(AuthService.TOKEN_KEY, "");
     const userJson = await AuthService.store.get(AuthService.USER_KEY, "");
-    AppStorage.setOrCreate<string>("authToken", typeof token === "string" ? token : "");
+    const tokenValue: string = typeof token === "string" ? token : "";
+    hilog.info(0x0000, "NekoAuth", "init token length=%{public}d", tokenValue.length);
+    AppStorage.setOrCreate<string>("authToken", tokenValue);
+    if (tokenValue.length > 0) {
+      // setOrCreate 在 key 已存在时不覆盖，这里强制同步一次
+      AppStorage.set<string>("authToken", tokenValue);
+    }
     if (typeof userJson === "string" && userJson.length > 0) {
       try {
         AppStorage.setOrCreate<NekoUser>("authUser", JSON.parse(userJson) as NekoUser);

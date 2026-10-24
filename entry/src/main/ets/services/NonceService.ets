@@ -2,6 +2,7 @@ import { http } from "@kit.NetworkKit";
 import { taskpool } from "@kit.ArkTS";
 import { solvePoW } from "./PoWWorker";
 import { APIConfig } from "./APIConfig";
+import { hilog } from '@kit.PerformanceAnalysisKit';
 
 /**
  * 后端防重放：每个动态接口都要一次性 X-Neko-Nonce。
@@ -31,9 +32,16 @@ export class NonceService {
   }
 
   async nextNonce(forWrite: boolean): Promise<string> {
+    hilog.info(0x0000, 'NekoNonce', 'nextNonce write=%{public}s readPool=%{public}d writePool=%{public}d',
+      forWrite ? 'true' : 'false', this.readNonces.length, this.writeNonces.length);
     const pool: string[] = forWrite ? this.writeNonces : this.readNonces;
     if (pool.length > 0) {
-      return pool.shift() as string;
+      const value: string = pool.shift() as string;
+      // 低于阈值就后台补充，避免下一次请求又要等 PoW（5 秒起）
+      if (pool.length < 3 && this.fetchPromise === undefined) {
+        this.refill(forWrite);
+      }
+      return value;
     }
 
     // 已有领取在进行中：等它完成后再取，不要并发发第二次请求
@@ -45,7 +53,7 @@ export class NonceService {
       }
     }
 
-    const task: Promise<void> = this.fetchNonces(forWrite ? 0 : 8, forWrite ? 8 : 0);
+    const task: Promise<void> = this.fetchNonces(forWrite ? 4 : 16, forWrite ? 16 : 4);
     this.fetchPromise = task;
     try {
       await task;
@@ -62,11 +70,28 @@ export class NonceService {
     throw new Error("nonce 领取失败");
   }
 
+  /** 后台补充池子，不阻塞当前请求 */
+  private refill(forWrite: boolean): void {
+    const task: Promise<void> = this.fetchNonces(forWrite ? 0 : 8, forWrite ? 8 : 0);
+    this.fetchPromise = task;
+    task.then(() => {
+      if (this.fetchPromise === task) {
+        this.fetchPromise = undefined;
+      }
+    }).catch(() => {
+      if (this.fetchPromise === task) {
+        this.fetchPromise = undefined;
+      }
+    });
+  }
+
   private async fetchNonces(read: number, write: number): Promise<void> {
     try {
+      hilog.info(0x0000, 'NekoNonce', 'fetchNonces start r=%{public}d w=%{public}d', read, write);
       const challengeURL: string =
         APIConfig.replayChallengeURL() + "?read=" + read + "&write=" + write;
       const challengeText: string = await this.rawGet(challengeURL);
+      hilog.info(0x0000, 'NekoNonce', 'challenge ok len=%{public}d', challengeText.length);
       const challengeJson: ChallengeResponse = JSON.parse(challengeText) as ChallengeResponse;
       if (!challengeJson.success) {
         throw new Error("换取挑战题失败");
@@ -76,12 +101,16 @@ export class NonceService {
         throw new Error("未支持的 PoW 算法");
       }
 
+      hilog.info(0x0000, 'NekoNonce', 'pow start difficulty=%{public}d', data.difficulty);
       const proof: number = await taskpool.execute(solvePoW, data.seed, data.difficulty) as number;
+      hilog.info(0x0000, 'NekoNonce', 'pow done proof=%{public}d', proof);
 
       const nonceURL: string = APIConfig.replayNonceURL() +
         "?challenge=" + encodeURIComponent(data.challenge) +
         "&proof=" + proof + "&read=" + read + "&write=" + write;
+      hilog.info(0x0000, 'NekoNonce', 'nonce request start');
       const nonceText: string = await this.rawGet(nonceURL);
+      hilog.info(0x0000, 'NekoNonce', 'nonce ok len=%{public}d', nonceText.length);
       const nonceJson: NonceResponse = JSON.parse(nonceText) as NonceResponse;
       if (!nonceJson.success) {
         throw new Error("兑换 nonce 失败");

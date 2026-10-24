@@ -105,7 +105,7 @@ export struct DiscoverPage {
           })
       }
       .width("100%")
-      .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+      .padding({ left: 16, right: 16, top: 40, bottom: 8 })
       .systemMaterial(MaterialService.header())
       .backgroundColor("#F5F6F8")
 

@@ -253,8 +253,10 @@ struct PlayerPage {
   }
 
   async toggleFavorite(): Promise<void> {
+    hilog.info(0x0000, "NekoFav", "toggleFavorite called");
     const music = this.currentMusic;
     if (music === undefined) {
+      hilog.info(0x0000, "NekoFav", "no current music");
       return;
     }
     if (!AuthService.isLoggedIn()) {
@@ -262,6 +264,7 @@ struct PlayerPage {
       return;
     }
     try {
+      hilog.info(0x0000, "NekoFav", "calling api musicId=%{public}d", music.id);
       const next: boolean = await FavoriteService.toggle(music.id);
       this.favorited = next;
       this.toast = next ? "已收藏" : "已取消收藏";
@@ -274,6 +277,11 @@ struct PlayerPage {
   aboutToAppear(): void {
     this.autoScrollLyric();
     this.favorited = FavoriteService.isFavorite(this.currentMusic?.id ?? -1);
+    if (AuthService.isLoggedIn()) {
+      FavoriteService.refresh().then(() => {
+        this.favorited = FavoriteService.isFavorite(this.currentMusic?.id ?? -1);
+      }).catch(() => {});
+    }
     // @StorageLink 对 AVPlayer 回调线程的更新不敏感，这里轮询同步
     setInterval(() => {
       const currentId: number = this.currentMusic?.id ?? -1;
