@@ -14,6 +14,7 @@ import { AuthService } from "../services/AuthService";
 import { LyricLine } from "../services/LyricsParser";
 import { AudioPlayerService as Player } from "../services/AudioPlayerService";
 import { PlaylistService, PlaylistInfo } from '../services/PlaylistService';
+import { promptAction } from '@kit.ArkUI';
 
 @Entry
 @Component
@@ -77,39 +78,51 @@ struct PlayerPage {
       }
 
       Column() {
-        // 顶部返回
+        // 顶部栏：圆形返回 + 右侧胶囊（词 / 更多）
         Row() {
-          Text("⌄")
-            .fontSize(30)
-            .fontColor("#FFFFFF")
-            .onClick(() => {
-              router.back();
-            })
+          Stack() {
+            SymbolGlyph($r('sys.symbol.chevron_left'))
+              .fontSize(20)
+              .fontColor([Color.White])
+          }
+          .width(40)
+          .height(40)
+          .backgroundColor('#33FFFFFF')
+          .borderRadius(20)
+          .onClick(() => {
+            router.back();
+          })
+
           Blank()
-          Text("正在播放")
-            .fontSize(14)
-            .fontColor("#DDDDDD")
-          Blank()
-          Text("词")
-            .fontSize(16)
-            .fontWeight(this.lyricProgress > 0.5 ? FontWeight.Bold : FontWeight.Normal)
-            .fontColor(this.lyricProgress > 0.5 ? "#FFFFFF" : "#DDDDDD")
-            .padding({ left: 14, right: 14 })
-            .onClick(() => {
-              if (this.lyricProgress > 0.5) {
-                this.pageController.showPrevious();
-              } else {
-                this.pageController.showNext();
-              }
-            })
-          Blank()
-          Text("更多")
-            .fontSize(14)
-            .fontColor("#DDDDDD")
+
+          Row() {
+            Text('词')
+              .fontSize(15)
+              .fontWeight(this.lyricProgress > 0.5 ? FontWeight.Bold : FontWeight.Normal)
+              .fontColor(this.lyricProgress > 0.5 ? '#FFFFFF' : '#DDDDDD')
+              .padding({ left: 18, right: 18, top: 10, bottom: 10 })
+              .onClick(() => {
+                if (this.lyricProgress > 0.5) {
+                  this.pageController.showPrevious();
+                } else {
+                  this.pageController.showNext();
+                }
+              })
+
+            Text('···')
+              .fontSize(17)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#DDDDDD')
+              .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+              .onClick(() => {
+                this.showMoreMenu();
+              })
+          }
+          .backgroundColor('#33FFFFFF')
+          .borderRadius(22)
         }
-        .width("100%")
-        .padding({ left: 20, right: 20, top: 12, bottom: 12 })
-        .systemMaterial(MaterialService.header())
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 56, bottom: 12 })
 
         Blank().height(12)
 
@@ -242,17 +255,6 @@ struct PlayerPage {
           this.controlButton($r("sys.symbol.forward_end_fill"), 26, () => {
             AudioPlayerService.shared().next();
           })
-          // 加到歌单（组件内点击才可靠）
-          AddToPlaylistButton({
-            onTap: () => {
-              if (this.playlists.length === 0) {
-                this.toast = '请先在音乐库新建歌单';
-              } else {
-                this.addToPlaylist(this.playlists[0].id);
-              }
-            }
-          })
-
           FavoriteButton({
             favorited: this.favorited,
             onToggle: () => {
@@ -301,6 +303,14 @@ struct PlayerPage {
       const err = error as Error;
       this.toast = err.message;
     }
+  }
+
+  showMoreMenu(): void {
+    if (this.playlists.length === 0) {
+      this.toast = '先去音乐库新建歌单';
+      return;
+    }
+    this.addToPlaylist(this.playlists[0].id);
   }
 
   async toggleFavorite(): Promise<void> {
