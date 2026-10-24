@@ -5,6 +5,8 @@ import { picker } from '@kit.CoreFileKit';
 import { http } from '@kit.NetworkKit';
 import { router } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { AudioMetadataParser } from '../services/AudioMetadataParser';
+import { media } from '@kit.MediaKit';
 
 interface MyUpload {
   id: number;
@@ -27,6 +29,8 @@ struct UploadPage {
   @State private message: string = '';
   @State private uploads: MyUpload[] = [];
   @State private loadingUploads: boolean = false;
+  @State private previewing: boolean = false;
+  private previewPlayer: media.AVPlayer | undefined = undefined;
 
   aboutToAppear(): void {
     this.loadUploads();
@@ -94,10 +98,60 @@ struct UploadPage {
       this.fileUri = uris[0];
       const parts = uris[0].split('/');
       this.fileName = parts[parts.length - 1];
+      // 自动解析 ID3 标签
+      const meta = await AudioMetadataParser.parse(this.fileUri);
+      if (meta.title.length > 0 && this.title.trim().length === 0) {
+        this.title = meta.title;
+      }
+      if (meta.artist.length > 0 && this.artist.trim().length === 0) {
+        this.artist = meta.artist;
+      }
     } catch (error) {
       const err = error as Error;
       this.message = '选择文件失败: ' + err.message;
     }
+  }
+
+  async togglePreview(): Promise<void> {
+    if (this.previewing) {
+      await this.stopPreview();
+      return;
+    }
+    if (this.fileUri.length === 0) {
+      this.message = '先选择音频文件';
+      return;
+    }
+    try {
+      if (this.previewPlayer === undefined) {
+        this.previewPlayer = await media.createAVPlayer();
+      }
+      this.previewPlayer.url = this.fileUri;
+      this.previewPlayer.on('stateChange', (state: string) => {
+        if (state === 'prepared') {
+          this.previewPlayer?.play();
+          this.previewing = true;
+        } else if (state === 'completed') {
+          this.previewing = false;
+        }
+      });
+      this.previewPlayer.prepare();
+    } catch (error) {
+      const err = error as Error;
+      this.message = '预览失败: ' + err.message;
+      this.previewing = false;
+    }
+  }
+
+  async stopPreview(): Promise<void> {
+    try {
+      if (this.previewPlayer !== undefined) {
+        await this.previewPlayer.pause();
+        await this.previewPlayer.reset();
+      }
+    } catch (error) {
+      // ignore
+    }
+    this.previewing = false;
   }
 
   async upload(): Promise<void> {
@@ -250,6 +304,18 @@ struct UploadPage {
                 .fontColor('#666666')
                 .onClick(() => {
                   this.pickFile();
+                })
+
+              Button(this.previewing ? '停止' : '预览')
+                .fontSize(13)
+                .height(34)
+                .borderRadius(17)
+                .backgroundColor('#F2F2F5')
+                .fontColor('#666666')
+                .margin({ left: 8 })
+                .enabled(this.fileUri.length > 0)
+                .onClick(() => {
+                  this.togglePreview();
                 })
             }
             .width('100%')
