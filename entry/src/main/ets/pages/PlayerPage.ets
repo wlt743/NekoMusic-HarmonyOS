@@ -114,11 +114,11 @@ struct PlayerPage {
             if (this.currentMusic !== undefined) {
               RemoteImage({
                 url: MusicService.coverURL(this.currentMusic),
-                cornerRadius: 24
+                cornerRadius: 28
               })
-                .width(260)
-                .height(260)
-                .shadow({ radius: 30, color: "#66000000", offsetY: 10 })
+                .width(276)
+                .height(276)
+                .shadow({ radius: 44, color: "#4D000000", offsetY: 16 })
             }
           }
           .width("100%")
@@ -158,13 +158,13 @@ struct PlayerPage {
 
         // 歌名 / 歌手
         Text(this.currentMusic?.title ?? "未在播放")
-          .fontSize(24)
+          .fontSize(26)
           .fontWeight(FontWeight.Bold)
           .fontColor("#FFFFFF")
           .maxLines(1)
 
         Text(this.currentMusic?.artist ?? "")
-          .fontSize(14)
+          .fontSize(15)
           .fontColor("#CCCCCC")
           .margin({ top: 6 })
           .maxLines(1)
