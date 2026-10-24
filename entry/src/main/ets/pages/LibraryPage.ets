@@ -106,6 +106,13 @@ export struct LibraryPage {
             .fontSize(13)
             .fontColor('#999999')
             .layoutWeight(1)
+          Text('上传')
+            .fontSize(13)
+            .fontColor('#666666')
+            .padding({ right: 14 })
+            .onClick(() => {
+              router.pushUrl({ url: 'pages/UploadPage' });
+            })
           Text('+ 新建')
             .fontSize(13)
             .fontColor('#E5484D')

@@ -4,6 +4,7 @@
     "pages/PlayerPage",
     "pages/PlaylistPage",
     "pages/SettingsPage",
-    "pages/CommentsPage"
+    "pages/CommentsPage",
+    "pages/UploadPage"
   ]
 }
