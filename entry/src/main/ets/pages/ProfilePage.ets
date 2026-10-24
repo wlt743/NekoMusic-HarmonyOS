@@ -13,6 +13,27 @@ export struct ProfilePage {
   @State loggingIn: boolean = false;
   @State message: string = "";
 
+  /** 头像地址：优先用户 avatar，QQ 邮箱用 QQ 头像，否则空（显示首字母） */
+  private avatarUrl(): string {
+    const user = this.authUser;
+    if (user === undefined) {
+      return "";
+    }
+    const avatar = user.avatar ?? "";
+    if (avatar.length > 0) {
+      return avatar;
+    }
+    const email = user.email ?? "";
+    const at = email.indexOf("@");
+    if (at > 0 && email.substring(at + 1) === "qq.com") {
+      const qq = email.substring(0, at);
+      if (/^[0-9]+$/.test(qq)) {
+        return "https://q1.qlogo.cn/g?b=qq&nk=" + qq + "&s=640";
+      }
+    }
+    return "";
+  }
+
   async doLogin(): Promise<void> {
     if (this.email.trim().length === 0 || this.password.length === 0) {
       this.message = "请输入邮箱和密码";
@@ -120,12 +141,13 @@ export struct ProfilePage {
   userCard() {
     Row({ space: 14 }) {
       // 头像：有 avatar 用图片，否则显示昵称首字母
-      if (this.authUser !== undefined && (this.authUser.avatar ?? "").length > 0) {
-        Image(this.authUser.avatar)
+      if (this.avatarUrl().length > 0) {
+        Image(this.avatarUrl())
           .width(56)
           .height(56)
           .borderRadius(28)
           .objectFit(ImageFit.Cover)
+          .alt($r('app.media.startIcon'))
       } else {
         Stack() {
           Text((this.authUser?.nickname ?? "N").substring(0, 1).toUpperCase())
