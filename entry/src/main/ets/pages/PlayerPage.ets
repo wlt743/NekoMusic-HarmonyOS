@@ -15,6 +15,7 @@ import { LyricLine } from "../services/LyricsParser";
 import { AudioPlayerService as Player } from "../services/AudioPlayerService";
 import { PlaylistService, PlaylistInfo } from '../services/PlaylistService';
 import { promptAction } from '@kit.ArkUI';
+import { pasteboard } from '@kit.BasicServicesKit';
 
 @Entry
 @Component
@@ -177,11 +178,28 @@ struct PlayerPage {
         Blank().height(24)
 
         // 歌名 / 歌手
-        Text(this.currentMusic?.title ?? "未在播放")
-          .fontSize(26)
-          .fontWeight(FontWeight.Bold)
-          .fontColor("#FFFFFF")
-          .maxLines(1)
+        Row({ space: 12 }) {
+          Text(this.currentMusic?.title ?? "未在播放")
+            .fontSize(26)
+            .fontWeight(FontWeight.Bold)
+            .fontColor("#FFFFFF")
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .constraintSize({ maxWidth: "76%" })
+
+          Stack() {
+            SymbolGlyph($r('sys.symbol.share'))
+              .fontSize(20)
+              .fontColor([Color.White])
+          }
+          .width(36)
+          .height(36)
+          .onClick(() => {
+            this.shareSong();
+          })
+        }
+        .justifyContent(FlexAlign.Center)
+        .width("100%")
 
         Text(this.currentMusic?.artist ?? "")
           .fontSize(15)
@@ -311,6 +329,22 @@ struct PlayerPage {
       return;
     }
     this.addToPlaylist(this.playlists[0].id);
+  }
+
+  /** 分享：把歌曲信息复制到剪贴板 */
+  shareSong(): void {
+    const music = this.currentMusic;
+    if (music === undefined) {
+      return;
+    }
+    const text: string = music.title + ' - ' + music.artist + '\n' + 'https://music.nekocore.cn/music/' + music.id;
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+      pasteboard.getSystemPasteboard().setData(data);
+      this.toast = '分享文案已复制';
+    } catch (error) {
+      this.toast = '复制失败';
+    }
   }
 
   async toggleFavorite(): Promise<void> {
