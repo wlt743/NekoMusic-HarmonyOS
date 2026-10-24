@@ -1,9 +1,12 @@
 import { MaterialService } from "../services/MaterialService";
 import { router } from "@kit.ArkUI";
+import { hilog } from "@kit.PerformanceAnalysisKit";
+import { togglePlay, currentPlayerState } from "../services/PlayerCore";
 import { MusicService } from "../services/MusicService";
 import { MusicItem } from "../models/Music";
 import { AudioPlayerService } from "../services/AudioPlayerService";
 import { RemoteImage } from "../components/RemoteImage";
+import { PlayToggleButton } from "../components/PlayToggleButton";
 import { LyricLine } from "../services/LyricsParser";
 import { AudioPlayerService as Player } from "../services/AudioPlayerService";
 
@@ -12,7 +15,7 @@ import { AudioPlayerService as Player } from "../services/AudioPlayerService";
 struct PlayerPage {
   @StorageLink("currentMusic") currentMusic: MusicItem | undefined = undefined;
   @StorageLink("isPlaying") isPlaying: boolean = false;
-  @State private playingSync: boolean = false;
+  @State playingSync: boolean = false;
   @StorageLink("position") playbackPosition: number = 0;
   @StorageLink("duration") duration: number = 0;
   @StorageLink("currentLyric") currentLyric: string = "";
@@ -212,8 +215,13 @@ struct PlayerPage {
           this.controlButton($r("sys.symbol.backward_end_fill"), 26, () => {
             AudioPlayerService.shared().previous();
           })
-          this.controlButton(this.isPlaying ? $r("sys.symbol.pause_fill") : $r("sys.symbol.play_fill"), 40, () => {
-            AudioPlayerService.shared().toggle();
+          PlayToggleButton({
+            playing: this.playingSync,
+            onToggle: () => {
+              togglePlay().then((playing: boolean) => {
+                this.playingSync = playing;
+              });
+            }
           })
           this.controlButton($r("sys.symbol.forward_end_fill"), 26, () => {
             AudioPlayerService.shared().next();
@@ -237,9 +245,10 @@ struct PlayerPage {
     this.autoScrollLyric();
     // @StorageLink 对 AVPlayer 回调线程的更新不敏感，这里轮询同步
     setInterval(() => {
-      const value: boolean = AudioPlayerService.shared().isPlayingNow();
+      const value: boolean = currentPlayerState() === "playing";
       if (value !== this.playingSync) {
         this.playingSync = value;
+        hilog.info(0x0000, "NekoPlayer", "playingSync -> %{public}s", value ? "true" : "false");
       }
     }, 400);
   }

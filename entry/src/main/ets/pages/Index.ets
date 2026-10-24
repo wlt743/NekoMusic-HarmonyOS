@@ -1,4 +1,3 @@
-import { MaterialService } from "../services/MaterialService";
 import { HdsTabs } from "@hms.hds.hdsBaseComponent";
 import { NonceService } from "../services/NonceService";
 import { HomePage } from "./HomePage";

@@ -1,6 +1,7 @@
 import { media } from "@kit.MediaKit";
 import { BusinessError } from "@kit.BasicServicesKit";
 import { hilog } from "@kit.PerformanceAnalysisKit";
+import { registerPlayer } from "./PlayerCore";
 import { HttpClient } from "./HttpClient";
 import { MusicService } from "./MusicService";
 import { LyricsParser, LyricLine } from "./LyricsParser";
@@ -39,7 +40,16 @@ export class AudioPlayerService {
 
   /** 直接读播放器状态，绕开 AppStorage 的线程问题 */
   isPlayingNow(): boolean {
-    return this.player !== undefined && this.player.state === "playing";
+    const player: media.AVPlayer | undefined =
+      this.player ?? AppStorage.get<media.AVPlayer>("nekoPlayerInstance");
+    if (player === undefined) {
+      return false;
+    }
+    const state: string = player.state as string;
+    if (state !== "playing" && state !== "paused") {
+      hilog.info(0x0000, "NekoPlayer", "isPlayingNow state=%{public}s", state);
+    }
+    return state === "playing";
   }
 
   currentMusic(): MusicItem | undefined {
@@ -125,9 +135,13 @@ export class AudioPlayerService {
   }
 
   private async switchTo(url: string): Promise<void> {
+    // 说明：ArkTS 里不同页面拿到的 service 可能不是同一个实例，
+    // 播放器引用通过 AppStorage 共享，避免 toggle 时 player 为 undefined。
     this.preparing = true;
     if (this.player === undefined) {
       this.player = await media.createAVPlayer();
+      AppStorage.setOrCreate<media.AVPlayer>("nekoPlayerInstance", this.player);
+      registerPlayer(this.player);
       this.attachListeners();
     }
     this.player.url = url;
@@ -175,7 +189,8 @@ export class AudioPlayerService {
 
   /** 切换播放，返回切换后的状态（true=正在播放） */
   async toggle(): Promise<boolean> {
-    const player: media.AVPlayer | undefined = this.player;
+    const player: media.AVPlayer | undefined =
+      this.player ?? AppStorage.get<media.AVPlayer>("nekoPlayerInstance");
     if (player === undefined) {
       hilog.info(0x0000, "NekoPlayer", "toggle: player is undefined");
       return false;
