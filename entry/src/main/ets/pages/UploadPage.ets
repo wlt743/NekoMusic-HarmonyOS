@@ -30,6 +30,7 @@ struct UploadPage {
   @State private uploads: MyUpload[] = [];
   @State private loadingUploads: boolean = false;
   @State private previewing: boolean = false;
+  @State private progress: number = 0;
   private previewPlayer: media.AVPlayer | undefined = undefined;
 
   aboutToAppear(): void {
@@ -168,6 +169,7 @@ struct UploadPage {
       return;
     }
     this.uploading = true;
+    this.progress = 0;
     this.message = '上传中…';
     try {
       const request = http.createHttp();
@@ -180,6 +182,12 @@ struct UploadPage {
         ];
         const header: Record<string, string> = APIConfig.clientHeaders();
         header['Authorization'] = this.authToken;
+        // 上传进度监听
+        request.on('dataSendProgress', (info: http.DataSendProgressInfo) => {
+          if (info.totalSize > 0) {
+            this.progress = Math.min(info.sendSize / info.totalSize, 1);
+          }
+        });
         const response = await request.request('https://music.nekocore.cn/api/user/upload', {
           method: http.RequestMethod.POST,
           header: header,
@@ -326,6 +334,18 @@ struct UploadPage {
           .borderRadius(22)
           .shadow({ radius: 18, color: '#0F000000', offsetY: 6 })
           .alignItems(HorizontalAlign.Start)
+
+          if (this.uploading) {
+            Column({ space: 4 }) {
+              Progress({ value: this.progress * 100, total: 100, type: ProgressType.Linear })
+                .width('100%')
+                .color('#E5484D')
+              Text(Math.round(this.progress * 100) + '%')
+                .fontSize(11)
+                .fontColor('#999999')
+            }
+            .width('100%')
+          }
 
           Button(this.uploading ? '上传中…' : '上传')
             .width('100%')
