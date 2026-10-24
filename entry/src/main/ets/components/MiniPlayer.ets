@@ -3,9 +3,10 @@ import { MusicService } from '../services/MusicService';
 import { AudioPlayerService } from '../services/AudioPlayerService';
 import { togglePlay, currentPlayerState } from '../services/PlayerCore';
 import { RemoteImage } from '../components/RemoteImage';
+import { MaterialService } from '../services/MaterialService';
 import { router } from '@kit.ArkUI';
 
-/** 底部悬浮迷你播放条 */
+/** 底部悬浮迷你播放条（沉浸光感材质） */
 @Component
 export struct MiniPlayer {
   @StorageLink('currentMusic') currentMusic: MusicItem | undefined = undefined;
@@ -22,13 +23,6 @@ export struct MiniPlayer {
         this.playing = value;
       }
     }, 400);
-  }
-
-  private sliderValue(): number {
-    if (this.dragging) {
-      return this.dragValue;
-    }
-    return this.duration > 0 ? this.playbackPosition : 0;
   }
 
   build() {
@@ -49,7 +43,7 @@ export struct MiniPlayer {
               .width('100%')
             Text(this.currentMusic.artist)
               .fontSize(11)
-              .fontColor('#999999')
+              .fontColor('#666666')
               .maxLines(1)
               .width('100%')
           }
@@ -100,9 +94,8 @@ export struct MiniPlayer {
         .width('100%')
         .padding({ left: 10, right: 6, top: 8, bottom: 2 })
 
-        // 可拖动的进度条
         Slider({
-          value: this.sliderValue(),
+          value: this.dragging ? this.dragValue : (this.duration > 0 ? this.playbackPosition : 0),
           min: 0,
           max: this.duration > 0 ? this.duration : 1,
           style: SliderStyle.OutSet
@@ -110,7 +103,7 @@ export struct MiniPlayer {
           .width('100%')
           .trackThickness(2.5)
           .blockSize({ width: 10, height: 10 })
-          .trackColor('#22000000')
+          .trackColor('#33000000')
           .selectedColor('#E5484D')
           .blockColor('#E5484D')
           .onChange((value: number, mode: SliderChangeMode) => {
@@ -125,9 +118,10 @@ export struct MiniPlayer {
           .margin({ bottom: 2 })
       }
       .width('100%')
-      .backgroundColor('#F5FFFFFF')
       .borderRadius(24)
       .clip(true)
+      .backgroundColor('#E8FFFFFF')
+      .systemMaterial(MaterialService.header())
       .shadow({ radius: 24, color: '#26000000', offsetY: 8 })
       .onClick(() => {
         router.pushUrl({ url: 'pages/PlayerPage' });
