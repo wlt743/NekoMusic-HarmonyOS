@@ -2,6 +2,7 @@ import { HttpClient } from "./HttpClient";
 import { APIConfig } from "./APIConfig";
 import { AuthService } from "./AuthService";
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { MusicItem } from '../models/Music';
 
 interface FavoriteApiResponse {
   success: boolean;
@@ -29,18 +30,28 @@ export class FavoriteService {
       const json = JSON.parse(text) as Record<string, Object>;
       const favorites = json.favorites as Object[] | undefined;
       const ids: number[] = [];
+      const items: MusicItem[] = [];
       if (favorites !== undefined) {
         for (const item of favorites) {
           const record = item as Record<string, Object>;
           // 后端 favorites 直接返回音乐对象：id 就是 musicId
           const music = record.music as Record<string, Object> | undefined;
-          const id = record.musicId ?? record.id ?? (music !== undefined ? music.id : undefined);
+          const source: Record<string, Object> = music !== undefined ? music : record;
+          const id = record.musicId ?? record.id ?? source.id;
           if (typeof id === "number") {
             ids.push(id);
+            const titleValue = source.title;
+            const artistValue = source.artist;
+            items.push({
+              id: id,
+              title: typeof titleValue === "string" ? titleValue : "",
+              artist: typeof artistValue === "string" ? artistValue : ""
+            });
           }
         }
       }
       AppStorage.set<number[]>("favoriteIds", ids);
+      AppStorage.set<MusicItem[]>("favoriteList", items);
       return ids;
     } catch (error) {
       return FavoriteService.ids();
