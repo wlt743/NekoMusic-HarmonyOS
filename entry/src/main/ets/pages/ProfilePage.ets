@@ -118,7 +118,27 @@ export struct ProfilePage {
 
   @Builder
   userCard() {
-    Row({ space: 12 }) {
+    Row({ space: 14 }) {
+      // 头像：有 avatar 用图片，否则显示昵称首字母
+      if (this.authUser !== undefined && (this.authUser.avatar ?? "").length > 0) {
+        Image(this.authUser.avatar)
+          .width(56)
+          .height(56)
+          .borderRadius(28)
+          .objectFit(ImageFit.Cover)
+      } else {
+        Stack() {
+          Text((this.authUser?.nickname ?? "N").substring(0, 1).toUpperCase())
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor("#FFFFFF")
+        }
+        .width(56)
+        .height(56)
+        .borderRadius(28)
+        .backgroundColor("#E5484D")
+      }
+
       Column({ space: 4 }) {
         Text(this.authUser?.nickname ?? "已登录")
           .fontSize(18)
@@ -165,6 +185,12 @@ export struct ProfilePage {
       }
 
       Blank().height(16)
+
+      Text("个性化")
+        .fontSize(13)
+        .fontColor("#999999")
+        .width("100%")
+        .padding({ left: 4, bottom: 8 })
 
       Column({ space: 1 }) {
         this.settingRow("更换壁纸", this.wallpaperUri.length > 0 ? "已设置" : "未设置", () => {
