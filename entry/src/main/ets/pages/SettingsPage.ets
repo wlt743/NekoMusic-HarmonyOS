@@ -2,6 +2,9 @@ import { AuthService, NekoUser } from '../services/AuthService';
 import { WallpaperService } from '../services/WallpaperService';
 import { RemoteImage } from '../components/RemoteImage';
 import { HttpClient } from '../services/HttpClient';
+import { APIConfig } from '../services/APIConfig';
+import { photoAccessHelper } from '@kit.MediaLibraryKit';
+import { http } from '@kit.NetworkKit';
 import { router } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
@@ -14,6 +17,7 @@ struct SettingsPage {
   @State private nickname: string = '';
   @State private saving: boolean = false;
   @State private message: string = '';
+  @State private avatarVersion: number = 0;
 
   aboutToAppear(): void {
     this.nickname = this.authUser?.nickname ?? '';
@@ -24,7 +28,55 @@ struct SettingsPage {
     if (user === undefined) {
       return '';
     }
-    return 'https://music.nekocore.cn/api/user/avatar/' + user.id;
+    return 'https://music.nekocore.cn/api/user/avatar/' + user.id + '?v=' + this.avatarVersion;
+  }
+
+  /** 选图并上传头像 */
+  async uploadAvatar(): Promise<void> {
+    try {
+      const picker = new photoAccessHelper.PhotoViewPicker();
+      const options = new photoAccessHelper.PhotoSelectOptions();
+      options.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
+      options.maxSelectNumber = 1;
+      const result = await picker.select(options);
+      if (result.photoUris.length === 0) {
+        return;
+      }
+      const uri: string = result.photoUris[0];
+      this.message = '上传中…';
+
+      const request = http.createHttp();
+      try {
+        const formData: http.MultiFormData[] = [{
+          name: 'avatar',
+          contentType: 'image/jpeg',
+          remoteFileName: 'avatar.jpg',
+          filePath: uri
+        }];
+        const header: Record<string, string> = APIConfig.clientHeaders();
+        header['Authorization'] = this.authToken;
+        const response = await request.request('https://music.nekocore.cn/api/user/avatar/upload', {
+          method: http.RequestMethod.POST,
+          header: header,
+          multiFormDataList: formData,
+          connectTimeout: 30000,
+          readTimeout: 60000,
+          expectDataType: http.HttpDataType.STRING
+        });
+        if (response.responseCode >= 200 && response.responseCode < 300) {
+          this.avatarVersion = Date.now();
+          this.message = '头像已更新';
+        } else {
+          this.message = '上传失败(' + response.responseCode + ')';
+        }
+      } finally {
+        request.destroy();
+      }
+    } catch (error) {
+      const err = error as Error;
+      this.message = '上传失败: ' + err.message;
+      hilog.error(0x0000, 'NekoAvatar', 'upload failed: %{public}s', err.message);
+    }
   }
 
   async saveNickname(): Promise<void> {
@@ -100,7 +152,6 @@ struct SettingsPage {
 
   build() {
     Column() {
-      // 顶栏
       Row({ space: 12 }) {
         Stack() {
           SymbolGlyph($r('sys.symbol.chevron_left'))
@@ -123,24 +174,32 @@ struct SettingsPage {
 
       Scroll() {
         Column({ space: 14 }) {
-          // 头像
+          // 头像（点击上传）
           Column({ space: 10 }) {
-            if (this.avatarUrl().length > 0) {
-              RemoteImage({ url: this.avatarUrl(), cornerRadius: 40 })
-                .width(80)
-                .height(80)
-            } else {
-              Stack() {
+            Stack() {
+              if (this.avatarUrl().length > 0) {
+                RemoteImage({ url: this.avatarUrl(), cornerRadius: 40 })
+                  .width(80)
+                  .height(80)
+              } else {
                 Text((this.authUser?.nickname ?? 'N').substring(0, 1).toUpperCase())
                   .fontSize(30)
                   .fontWeight(FontWeight.Bold)
                   .fontColor('#FFFFFF')
               }
-              .width(80)
-              .height(80)
-              .borderRadius(40)
-              .backgroundColor('#E5484D')
             }
+            .width(80)
+            .height(80)
+            .borderRadius(40)
+            .clip(true)
+            .backgroundColor('#E5484D')
+            .onClick(() => {
+              this.uploadAvatar();
+            })
+
+            Text('点击更换头像')
+              .fontSize(12)
+              .fontColor('#E5484D')
 
             Text(this.authUser?.email ?? '')
               .fontSize(12)

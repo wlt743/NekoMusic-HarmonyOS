@@ -26,6 +26,7 @@ struct PlayerPage {
   @StorageLink("favoriteIds") favoriteIds: number[] = [];
   @State private favorited: boolean = false;
   @State private toast: string = "";
+  @State showPlaylistSheet: boolean = false;
   @StorageLink('myPlaylists') playlists: PlaylistInfo[] = [];
   @StorageLink("position") playbackPosition: number = 0;
   @StorageLink("duration") duration: number = 0;
@@ -116,7 +117,7 @@ struct PlayerPage {
               .fontColor('#DDDDDD')
               .padding({ left: 16, right: 16, top: 10, bottom: 10 })
               .onClick(() => {
-                this.showMoreMenu();
+                this.showPlaylistSheet = true;
               })
           }
           .backgroundColor('#33FFFFFF')
@@ -291,6 +292,10 @@ struct PlayerPage {
     .width("100%")
     .height("100%")
     .backgroundColor("#1A1A1A")
+    .bindSheet($$this.showPlaylistSheet, this.playlistSheet(), {
+      height: 360,
+      dragBar: true
+    })
   }
 
   @Builder
@@ -345,6 +350,49 @@ struct PlayerPage {
     } catch (error) {
       this.toast = '复制失败';
     }
+  }
+
+  @Builder
+  playlistSheet() {
+    Column({ space: 4 }) {
+      Text('添加到歌单')
+        .fontSize(17)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1A1A1A')
+        .width('100%')
+        .padding({ left: 20, top: 8, bottom: 12 })
+
+      if (this.playlists.length === 0) {
+        Text('还没有歌单，先去音乐库新建')
+          .fontSize(14)
+          .fontColor('#999999')
+          .width('100%')
+          .padding({ left: 20, top: 12, bottom: 12 })
+      } else {
+        ForEach(this.playlists, (item: PlaylistInfo) => {
+          Row({ space: 12 }) {
+            SymbolGlyph($r('sys.symbol.music_note_list'))
+              .fontSize(18)
+              .fontColor(['#E5484D'])
+            Text(item.name)
+              .fontSize(15)
+              .fontColor('#1A1A1A')
+              .layoutWeight(1)
+            Text((item.musicCount ?? 0) + ' 首')
+              .fontSize(12)
+              .fontColor('#999999')
+          }
+          .width('100%')
+          .padding({ left: 20, right: 20, top: 14, bottom: 14 })
+          .onClick(() => {
+            this.showPlaylistSheet = false;
+            this.addToPlaylist(item.id);
+          })
+        }, (item: PlaylistInfo) => item.id.toString())
+      }
+    }
+    .width('100%')
+    .padding({ bottom: 24 })
   }
 
   async toggleFavorite(): Promise<void> {
