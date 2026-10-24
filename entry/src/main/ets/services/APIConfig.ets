@@ -94,6 +94,30 @@ export class APIConfig {
   }
 
   // MARK: - 用户
+  static myPlaylistsURL(): string {
+    return APIConfig.baseURL + '/api/user/playlists';
+  }
+
+  static playlistCreateURL(): string {
+    return APIConfig.baseURL + '/api/user/playlist/create';
+  }
+
+  static playlistDeleteURL(): string {
+    return APIConfig.baseURL + '/api/user/playlist/delete';
+  }
+
+  static playlistMusicURL(playlistId: number): string {
+    return APIConfig.baseURL + '/api/user/playlist/music/' + playlistId;
+  }
+
+  static playlistAddMusicURL(): string {
+    return APIConfig.baseURL + '/api/user/playlist/music/add';
+  }
+
+  static playlistRemoveMusicURL(): string {
+    return APIConfig.baseURL + '/api/user/playlist/music/remove';
+  }
+
   static favoritesURL(): string {
     return APIConfig.baseURL + "/api/user/favorites";
   }

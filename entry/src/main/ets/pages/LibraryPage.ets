@@ -6,15 +6,30 @@ import { RemoteImage } from '../components/RemoteImage';
 import { MaterialService } from '../services/MaterialService';
 import { router } from '@kit.ArkUI';
 import { AuthService } from '../services/AuthService';
+import { PlaylistService, PlaylistInfo } from '../services/PlaylistService';
 
 @Component
 export struct LibraryPage {
   @StorageLink('favoriteList') favorites: MusicItem[] = [];
   @StorageLink('authToken') authToken: string = '';
+  @StorageLink('myPlaylists') playlists: PlaylistInfo[] = [];
+  @State toast: string = '';
 
   aboutToAppear(): void {
     if (AuthService.isLoggedIn()) {
       FavoriteService.refresh().catch(() => {});
+      PlaylistService.refresh().catch(() => {});
+    }
+  }
+
+  async createPlaylist(): Promise<void> {
+    try {
+      const name: string = '我的歌单 ' + (this.playlists.length + 1);
+      await PlaylistService.create(name, '');
+      this.toast = '歌单已创建';
+    } catch (error) {
+      const err = error as Error;
+      this.toast = err.message;
     }
   }
 
@@ -90,6 +105,51 @@ export struct LibraryPage {
         .height(200)
         .justifyContent(FlexAlign.Center)
       } else {
+        // 我的歌单
+        Row() {
+          Text('我的歌单 (' + this.playlists.length + ')')
+            .fontSize(13)
+            .fontColor('#999999')
+            .layoutWeight(1)
+          Text('+ 新建')
+            .fontSize(13)
+            .fontColor('#E5484D')
+            .onClick(() => {
+              this.createPlaylist();
+            })
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 8, bottom: 4 })
+
+        ForEach(this.playlists, (item: PlaylistInfo) => {
+          Row({ space: 12 }) {
+            Column({ space: 4 }) {
+              Text(item.name)
+                .fontSize(15)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#1A1A1A')
+                .maxLines(1)
+              Text((item.musicCount ?? 0) + ' 首')
+                .fontSize(12)
+                .fontColor('#999999')
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            SymbolGlyph($r('sys.symbol.chevron_right'))
+              .fontSize(16)
+              .fontColor(['#C7C7CC'])
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+          .backgroundColor('#FFFFFF')
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/PlaylistPage', params: { playlistId: item.id, name: item.name } });
+          })
+        }, (item: PlaylistInfo) => item.id.toString())
+
+        Blank().height(8)
+
         Text('我喜欢的音乐 (' + this.favorites.length + ')')
           .fontSize(13)
           .fontColor('#999999')
