@@ -8,10 +8,12 @@ import { AudioPlayerService } from "../services/AudioPlayerService";
 import { RemoteImage } from "../components/RemoteImage";
 import { PlayToggleButton } from "../components/PlayToggleButton";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { AddToPlaylistButton } from '../components/AddToPlaylistButton';
 import { FavoriteService } from "../services/FavoriteService";
 import { AuthService } from "../services/AuthService";
 import { LyricLine } from "../services/LyricsParser";
 import { AudioPlayerService as Player } from "../services/AudioPlayerService";
+import { PlaylistService, PlaylistInfo } from '../services/PlaylistService';
 
 @Entry
 @Component
@@ -22,6 +24,7 @@ struct PlayerPage {
   @StorageLink("favoriteIds") favoriteIds: number[] = [];
   @State private favorited: boolean = false;
   @State private toast: string = "";
+  @StorageLink('myPlaylists') playlists: PlaylistInfo[] = [];
   @StorageLink("position") playbackPosition: number = 0;
   @StorageLink("duration") duration: number = 0;
   @StorageLink("currentLyric") currentLyric: string = "";
@@ -232,6 +235,17 @@ struct PlayerPage {
           this.controlButton($r("sys.symbol.forward_end_fill"), 26, () => {
             AudioPlayerService.shared().next();
           })
+          // 加到歌单（组件内点击才可靠）
+          AddToPlaylistButton({
+            onTap: () => {
+              if (this.playlists.length === 0) {
+                this.toast = '请先在音乐库新建歌单';
+              } else {
+                this.addToPlaylist(this.playlists[0].id);
+              }
+            }
+          })
+
           FavoriteButton({
             favorited: this.favorited,
             onToggle: () => {
@@ -250,6 +264,36 @@ struct PlayerPage {
     .width("100%")
     .height("100%")
     .backgroundColor("#1A1A1A")
+  }
+
+  @Builder
+  playlistMenu() {
+    Menu() {
+      if (this.playlists.length === 0) {
+        MenuItem({ content: '还没有歌单，去音乐库新建' })
+      } else {
+        ForEach(this.playlists, (item: PlaylistInfo) => {
+          MenuItem({ content: item.name })
+            .onClick(() => {
+              this.addToPlaylist(item.id);
+            })
+        }, (item: PlaylistInfo) => item.id.toString())
+      }
+    }
+  }
+
+  async addToPlaylist(playlistId: number): Promise<void> {
+    const music = this.currentMusic;
+    if (music === undefined) {
+      return;
+    }
+    try {
+      await PlaylistService.addMusic(playlistId, music.id);
+      this.toast = '已添加到歌单';
+    } catch (error) {
+      const err = error as Error;
+      this.toast = err.message;
+    }
   }
 
   async toggleFavorite(): Promise<void> {
@@ -278,6 +322,7 @@ struct PlayerPage {
     this.autoScrollLyric();
     this.favorited = FavoriteService.isFavorite(this.currentMusic?.id ?? -1);
     if (AuthService.isLoggedIn()) {
+      PlaylistService.refresh().catch(() => {});
       FavoriteService.refresh().then(() => {
         this.favorited = FavoriteService.isFavorite(this.currentMusic?.id ?? -1);
       }).catch(() => {});
