@@ -3,6 +3,7 @@ import { MaterialService } from "../services/MaterialService";
 import { AuthService, NekoUser } from "../services/AuthService";
 import { FavoriteService } from '../services/FavoriteService';
 import { RemoteImage } from '../components/RemoteImage';
+import { router } from '@kit.ArkUI';
 
 @Component
 export struct ProfilePage {
@@ -123,6 +124,9 @@ export struct ProfilePage {
     .backgroundColor("#FFFFFF")
     .borderRadius(22)
     .shadow({ radius: 18, color: "#0F000000", offsetY: 6 })
+    .onClick(() => {
+      router.pushUrl({ url: "pages/SettingsPage" });
+    })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -173,6 +177,9 @@ export struct ProfilePage {
     .backgroundColor("#FFFFFF")
     .borderRadius(22)
     .shadow({ radius: 18, color: "#0F000000", offsetY: 6 })
+    .onClick(() => {
+      router.pushUrl({ url: "pages/SettingsPage" });
+    })
   }
 
   build() {

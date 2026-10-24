@@ -2,6 +2,7 @@
   "src": [
     "pages/Index",
     "pages/PlayerPage",
-    "pages/PlaylistPage"
+    "pages/PlaylistPage",
+    "pages/SettingsPage"
   ]
 }
