@@ -98,6 +98,22 @@ struct PlayerPage {
           Blank()
 
           Row() {
+            // 评论
+            Stack() {
+              Text('评')
+                .fontSize(14)
+                .fontColor('#DDDDDD')
+            }
+            .width(44)
+            .height(38)
+            .onClick(() => {
+              const music = this.currentMusic;
+              router.pushUrl({
+                url: 'pages/CommentsPage',
+                params: { musicId: music?.id ?? 0, title: music?.title ?? '' }
+              });
+            })
+
             Text('词')
               .fontSize(15)
               .fontWeight(this.lyricProgress > 0.5 ? FontWeight.Bold : FontWeight.Normal)

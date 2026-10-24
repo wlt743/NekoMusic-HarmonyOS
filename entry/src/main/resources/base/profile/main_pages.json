@@ -3,6 +3,7 @@
     "pages/Index",
     "pages/PlayerPage",
     "pages/PlaylistPage",
-    "pages/SettingsPage"
+    "pages/SettingsPage",
+    "pages/CommentsPage"
   ]
 }
