@@ -22,8 +22,9 @@ struct Index {
   tabItem(title: string, icon: Resource, activeIcon: Resource, index: number) {
     Column({ space: 3 }) {
       SymbolGlyph(this.currentIndex === index ? activeIcon : icon)
-        .fontSize(22)
+        .fontSize(this.currentIndex === index ? 24 : 22)
         .fontColor([this.currentIndex === index ? "#E5484D" : "#7A7A7E"])
+        .animation({ duration: 180, curve: Curve.EaseOut })
       Text(title)
         .fontSize(10)
         .fontWeight(this.currentIndex === index ? FontWeight.Medium : FontWeight.Normal)

@@ -55,6 +55,13 @@ struct PlayerPage {
     return minute.toString().padStart(2, "0") + ":" + second.toString().padStart(2, "0");
   }
 
+  pageTransition() {
+    PageTransitionEnter({ duration: 280, curve: Curve.FastOutSlowIn })
+      .slide(SlideEffect.Bottom)
+    PageTransitionExit({ duration: 240, curve: Curve.EaseIn })
+      .slide(SlideEffect.Bottom)
+  }
+
   build() {
     Stack() {
       // 背景：封面模糊
@@ -253,7 +260,7 @@ struct PlayerPage {
             }
           })
         }
-        .width("85%")
+        .width("78%")
         .justifyContent(FlexAlign.SpaceBetween)
         .margin({ top: 8 })
       }

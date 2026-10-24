@@ -52,6 +52,13 @@ struct PlaylistPage {
     router.pushUrl({ url: 'pages/PlayerPage' });
   }
 
+  pageTransition() {
+    PageTransitionEnter({ duration: 260, curve: Curve.FastOutSlowIn })
+      .slide(SlideEffect.Right)
+    PageTransitionExit({ duration: 220, curve: Curve.EaseIn })
+      .slide(SlideEffect.Right)
+  }
+
   build() {
     Column() {
       // 顶栏
@@ -91,7 +98,7 @@ struct PlaylistPage {
           ForEach(this.songs, (item: MusicItem) => {
             ListItem() {
               Row({ space: 12 }) {
-                RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 10 })
+                RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 14 })
                   .width(56)
                   .height(56)
                 Column({ space: 4 }) {
@@ -109,7 +116,9 @@ struct PlaylistPage {
                 .layoutWeight(1)
               }
               .width('100%')
-              .padding({ top: 8, bottom: 8 })
+              .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+              .backgroundColor("#FFFFFF")
+              .borderRadius(16)
               .onClick(() => {
                 this.play(item);
               })
@@ -119,7 +128,6 @@ struct PlaylistPage {
         .width('100%')
         .layoutWeight(1)
         .padding({ left: 16, right: 16 })
-        .divider({ strokeWidth: 0.5, color: '#EEEEEE', startMargin: 68, endMargin: 0 })
       }
     }
     .width('100%')
