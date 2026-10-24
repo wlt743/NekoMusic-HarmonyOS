@@ -12,6 +12,8 @@ export struct MiniPlayer {
   @StorageLink('position') playbackPosition: number = 0;
   @StorageLink('duration') duration: number = 0;
   @State private playing: boolean = false;
+  @State private dragging: boolean = false;
+  @State private dragValue: number = 0;
 
   aboutToAppear(): void {
     setInterval(() => {
@@ -22,29 +24,17 @@ export struct MiniPlayer {
     }, 400);
   }
 
-  private progress(): number {
-    if (this.duration <= 0) {
-      return 0;
+  private sliderValue(): number {
+    if (this.dragging) {
+      return this.dragValue;
     }
-    return this.playbackPosition / this.duration;
+    return this.duration > 0 ? this.playbackPosition : 0;
   }
 
   build() {
     if (this.currentMusic !== undefined) {
       Column() {
-        Row() {
-          Row()
-            .height(2.5)
-            .width(Math.max(this.progress() * 100, 0) + '%')
-            .backgroundColor('#E5484D')
-            .borderRadius(2)
-        }
-        .width('100%')
-        .height(2.5)
-        .backgroundColor('#22000000')
-        .borderRadius(2)
-
-        Row({ space: 10 }) {
+        Row({ space: 8 }) {
           RemoteImage({ url: MusicService.coverURL(this.currentMusic), cornerRadius: 10 })
             .width(42)
             .height(42)
@@ -67,6 +57,17 @@ export struct MiniPlayer {
           .layoutWeight(1)
 
           Stack() {
+            SymbolGlyph($r('sys.symbol.backward_end_fill'))
+              .fontSize(20)
+              .fontColor(['#1A1A1A'])
+          }
+          .width(38)
+          .height(38)
+          .onClick(() => {
+            AudioPlayerService.shared().previous();
+          })
+
+          Stack() {
             if (this.playing) {
               SymbolGlyph($r('sys.symbol.pause_fill'))
                 .fontSize(22)
@@ -77,8 +78,8 @@ export struct MiniPlayer {
                 .fontColor(['#1A1A1A'])
             }
           }
-          .width(40)
-          .height(40)
+          .width(38)
+          .height(38)
           .onClick(() => {
             togglePlay().then((playing: boolean) => {
               this.playing = playing;
@@ -90,14 +91,38 @@ export struct MiniPlayer {
               .fontSize(20)
               .fontColor(['#1A1A1A'])
           }
-          .width(40)
-          .height(40)
+          .width(38)
+          .height(38)
           .onClick(() => {
             AudioPlayerService.shared().next();
           })
         }
         .width('100%')
-        .padding({ left: 10, right: 8, top: 8, bottom: 8 })
+        .padding({ left: 10, right: 6, top: 8, bottom: 2 })
+
+        // 可拖动的进度条
+        Slider({
+          value: this.sliderValue(),
+          min: 0,
+          max: this.duration > 0 ? this.duration : 1,
+          style: SliderStyle.OutSet
+        })
+          .width('100%')
+          .trackThickness(2.5)
+          .blockSize({ width: 10, height: 10 })
+          .trackColor('#22000000')
+          .selectedColor('#E5484D')
+          .blockColor('#E5484D')
+          .onChange((value: number, mode: SliderChangeMode) => {
+            if (mode === SliderChangeMode.Begin || mode === SliderChangeMode.Moving) {
+              this.dragging = true;
+              this.dragValue = value;
+            } else if (mode === SliderChangeMode.End) {
+              AudioPlayerService.shared().seek(value);
+              this.dragging = false;
+            }
+          })
+          .margin({ bottom: 2 })
       }
       .width('100%')
       .backgroundColor('#F5FFFFFF')
