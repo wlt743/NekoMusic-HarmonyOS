@@ -6,17 +6,81 @@ import { http } from '@kit.NetworkKit';
 import { router } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
+interface MyUpload {
+  id: number;
+  title: string;
+  artist: string;
+  duration: number;
+  createdAt: number;
+}
+
 @Entry
 @Component
 struct UploadPage {
   @StorageLink('authToken') authToken: string = '';
   @State private title: string = '';
   @State private artist: string = '';
+  @State private language: string = 'zh';
   @State private fileName: string = '';
   @State private fileUri: string = '';
   @State private uploading: boolean = false;
-  @State private progress: number = 0;
   @State private message: string = '';
+  @State private uploads: MyUpload[] = [];
+  @State private loadingUploads: boolean = false;
+
+  aboutToAppear(): void {
+    this.loadUploads();
+  }
+
+  private languages: string[] = ['zh', 'ja', 'en', 'instrumental'];
+
+  private langLabel(code: string): string {
+    if (code === 'zh') {
+      return '中文';
+    }
+    if (code === 'ja') {
+      return '日语';
+    }
+    if (code === 'en') {
+      return '英文';
+    }
+    return '纯音乐';
+  }
+
+  async loadUploads(): Promise<void> {
+    if (!AuthService.isLoggedIn()) {
+      return;
+    }
+    this.loadingUploads = true;
+    try {
+      const text: string = await HttpClient.get(
+        'https://music.nekocore.cn/api/user/uploaded-music', this.authToken);
+      const json = JSON.parse(text) as Record<string, Object>;
+      const data = json.data as Record<string, Object>[] | undefined;
+      const list: MyUpload[] = [];
+      if (data !== undefined) {
+        for (const item of data) {
+          const id = item.id;
+          if (typeof id !== 'number') {
+            continue;
+          }
+          list.push({
+            id: id,
+            title: typeof item.title === 'string' ? item.title : '',
+            artist: typeof item.artist === 'string' ? item.artist : '',
+            duration: typeof item.duration === 'number' ? item.duration : 0,
+            createdAt: typeof item.createdAt === 'number' ? item.createdAt : 0
+          });
+        }
+      }
+      this.uploads = list;
+    } catch (error) {
+      const err = error as Error;
+      this.message = err.message;
+    } finally {
+      this.loadingUploads = false;
+    }
+  }
 
   async pickFile(): Promise<void> {
     try {
@@ -50,7 +114,6 @@ struct UploadPage {
       return;
     }
     this.uploading = true;
-    this.progress = 0;
     this.message = '上传中…';
     try {
       const request = http.createHttp();
@@ -58,6 +121,7 @@ struct UploadPage {
         const formData: http.MultiFormData[] = [
           { name: 'title', contentType: 'text/plain', remoteFileName: '', data: this.title.trim() },
           { name: 'artist', contentType: 'text/plain', remoteFileName: '', data: this.artist.trim() },
+          { name: 'language', contentType: 'text/plain', remoteFileName: '', data: this.language },
           { name: 'file', contentType: 'audio/mpeg', remoteFileName: this.fileName, filePath: this.fileUri }
         ];
         const header: Record<string, string> = APIConfig.clientHeaders();
@@ -76,6 +140,7 @@ struct UploadPage {
           this.artist = '';
           this.fileName = '';
           this.fileUri = '';
+          await this.loadUploads();
         } else {
           this.message = '上传失败(' + response.responseCode + ')';
         }
@@ -115,6 +180,7 @@ struct UploadPage {
 
       Scroll() {
         Column({ space: 14 }) {
+          // 歌曲信息
           Column({ space: 12 }) {
             Text('歌曲信息')
               .fontSize(13)
@@ -134,6 +200,25 @@ struct UploadPage {
               .onChange((value: string) => {
                 this.artist = value;
               })
+
+            // 语言选择
+            Row({ space: 8 }) {
+              Text('语言')
+                .fontSize(13)
+                .fontColor('#999999')
+              ForEach(this.languages, (code: string) => {
+                Text(this.langLabel(code))
+                  .fontSize(13)
+                  .fontColor(this.language === code ? '#FFFFFF' : '#666666')
+                  .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+                  .backgroundColor(this.language === code ? '#E5484D' : '#F2F2F5')
+                  .borderRadius(14)
+                  .onClick(() => {
+                    this.language = code;
+                  })
+              }, (code: string) => code)
+            }
+            .width('100%')
           }
           .width('100%')
           .padding(20)
@@ -168,12 +253,6 @@ struct UploadPage {
                 })
             }
             .width('100%')
-
-            if (this.uploading || this.progress > 0) {
-              Progress({ value: this.progress * 100, total: 100, type: ProgressType.Linear })
-                .width('100%')
-                .color('#E5484D')
-            }
           }
           .width('100%')
           .padding(20)
@@ -196,6 +275,49 @@ struct UploadPage {
             Text(this.message)
               .fontSize(12)
               .fontColor('#999999')
+          }
+
+          // 我的上传
+          if (AuthService.isLoggedIn()) {
+            Text('我的上传 (' + this.uploads.length + ')')
+              .fontSize(13)
+              .fontColor('#999999')
+              .width('100%')
+              .padding({ top: 8 })
+
+            if (this.loadingUploads) {
+              LoadingProgress().width(30).height(30)
+            } else if (this.uploads.length === 0) {
+              Text('还没有上传过歌曲')
+                .fontSize(12)
+                .fontColor('#BBBBBB')
+                .padding({ top: 8 })
+            } else {
+              ForEach(this.uploads, (item: MyUpload) => {
+                Row({ space: 10 }) {
+                  Column({ space: 4 }) {
+                    Text(item.title)
+                      .fontSize(14)
+                      .fontColor('#1A1A1A')
+                      .maxLines(1)
+                    Text(item.artist)
+                      .fontSize(11)
+                      .fontColor('#999999')
+                      .maxLines(1)
+                  }
+                  .alignItems(HorizontalAlign.Start)
+                  .layoutWeight(1)
+
+                  Text('已上架')
+                    .fontSize(10)
+                    .fontColor('#07C160')
+                }
+                .width('100%')
+                .padding(14)
+                .backgroundColor('#FFFFFF')
+                .borderRadius(16)
+              }, (item: MyUpload) => item.id.toString())
+            }
           }
         }
         .padding({ left: 16, right: 16, bottom: 40 })

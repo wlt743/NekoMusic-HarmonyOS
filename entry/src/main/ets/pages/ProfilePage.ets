@@ -202,6 +202,17 @@ export struct ProfilePage {
 
       Blank().height(14)
 
+      // 上传音乐入口
+      Column() {
+        this.settingRow('上传音乐', '上传自己的音频', () => {
+          router.pushUrl({ url: 'pages/UploadPage' });
+        })
+      }
+      .borderRadius(22)
+      .clip(true)
+      .shadow({ radius: 18, color: '#0F000000', offsetY: 6 })
+      .margin({ bottom: 14 })
+
       // 会员入口
       Column() {
         this.settingRow('会员中心', '无损音质、专属标识', () => {
