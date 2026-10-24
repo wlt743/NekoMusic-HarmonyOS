@@ -17,6 +17,10 @@ export class HttpClient {
     return HttpClient.send(url, http.RequestMethod.POST, body, token);
   }
 
+  static async delete(url: string, token: string = ""): Promise<string> {
+    return HttpClient.send(url, http.RequestMethod.DELETE, "", token);
+  }
+
   private static async send(url: string, method: http.RequestMethod,
     body: string, token: string): Promise<string> {
     for (let attempt: number = 0; attempt < 2; attempt++) {

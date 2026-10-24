@@ -94,6 +94,14 @@ export class APIConfig {
   }
 
   // MARK: - 用户
+  static favoritesURL(): string {
+    return APIConfig.baseURL + "/api/user/favorites";
+  }
+
+  static removeFavoriteURL(musicId: number): string {
+    return APIConfig.baseURL + "/api/user/favorites/" + musicId;
+  }
+
   static loginURL(): string {
     return APIConfig.baseURL + "/api/user/login";
   }

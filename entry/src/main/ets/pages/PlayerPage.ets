@@ -7,6 +7,9 @@ import { MusicItem } from "../models/Music";
 import { AudioPlayerService } from "../services/AudioPlayerService";
 import { RemoteImage } from "../components/RemoteImage";
 import { PlayToggleButton } from "../components/PlayToggleButton";
+import { FavoriteButton } from "../components/FavoriteButton";
+import { FavoriteService } from "../services/FavoriteService";
+import { AuthService } from "../services/AuthService";
 import { LyricLine } from "../services/LyricsParser";
 import { AudioPlayerService as Player } from "../services/AudioPlayerService";
 
@@ -16,6 +19,9 @@ struct PlayerPage {
   @StorageLink("currentMusic") currentMusic: MusicItem | undefined = undefined;
   @StorageLink("isPlaying") isPlaying: boolean = false;
   @State playingSync: boolean = false;
+  @StorageLink("favoriteIds") favoriteIds: number[] = [];
+  @State private favorited: boolean = false;
+  @State private toast: string = "";
   @StorageLink("position") playbackPosition: number = 0;
   @StorageLink("duration") duration: number = 0;
   @StorageLink("currentLyric") currentLyric: string = "";
@@ -226,7 +232,12 @@ struct PlayerPage {
           this.controlButton($r("sys.symbol.forward_end_fill"), 26, () => {
             AudioPlayerService.shared().next();
           })
-          this.controlButton($r("sys.symbol.heart"), 22, () => {})
+          FavoriteButton({
+            favorited: this.favorited,
+            onToggle: () => {
+              this.toggleFavorite();
+            }
+          })
         }
         .width("85%")
         .justifyContent(FlexAlign.SpaceBetween)
@@ -241,10 +252,35 @@ struct PlayerPage {
     .backgroundColor("#1A1A1A")
   }
 
+  async toggleFavorite(): Promise<void> {
+    const music = this.currentMusic;
+    if (music === undefined) {
+      return;
+    }
+    if (!AuthService.isLoggedIn()) {
+      this.toast = "请先登录";
+      return;
+    }
+    try {
+      const next: boolean = await FavoriteService.toggle(music.id);
+      this.favorited = next;
+      this.toast = next ? "已收藏" : "已取消收藏";
+    } catch (error) {
+      const err = error as Error;
+      this.toast = err.message;
+    }
+  }
+
   aboutToAppear(): void {
     this.autoScrollLyric();
+    this.favorited = FavoriteService.isFavorite(this.currentMusic?.id ?? -1);
     // @StorageLink 对 AVPlayer 回调线程的更新不敏感，这里轮询同步
     setInterval(() => {
+      const currentId: number = this.currentMusic?.id ?? -1;
+      const isFav: boolean = this.favoriteIds.indexOf(currentId) >= 0;
+      if (isFav !== this.favorited) {
+        this.favorited = isFav;
+      }
       const value: boolean = currentPlayerState() === "playing";
       if (value !== this.playingSync) {
         this.playingSync = value;
