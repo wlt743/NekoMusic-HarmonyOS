@@ -8,6 +8,7 @@ import { router } from '@kit.ArkUI';
 @Component
 export struct ProfilePage {
   @StorageLink("wallpaperUri") wallpaperUri: string = "";
+  @StorageLink('unreadCount') unreadCount: number = 0;
   @StorageLink("authToken") authToken: string = "";
   @StorageLink("authUser") authUser: NekoUser | undefined = undefined;
   @State email: string = "";
@@ -200,6 +201,18 @@ export struct ProfilePage {
       }
 
       Blank().height(14)
+
+      // 站内消息入口
+      Column() {
+        this.settingRow('站内消息',
+          this.unreadCount > 0 ? this.unreadCount + ' 条未读' : '', () => {
+            router.pushUrl({ url: 'pages/MessagesPage' });
+          })
+      }
+      .borderRadius(22)
+      .clip(true)
+      .shadow({ radius: 18, color: '#0F000000', offsetY: 6 })
+      .margin({ bottom: 14 })
 
       // 设置入口
       Column() {

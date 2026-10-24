@@ -5,6 +5,7 @@
     "pages/PlaylistPage",
     "pages/SettingsPage",
     "pages/CommentsPage",
-    "pages/UploadPage"
+    "pages/UploadPage",
+    "pages/MessagesPage"
   ]
 }
