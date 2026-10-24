@@ -48,7 +48,7 @@ export struct LibraryPage {
   @Builder
   songRow(item: MusicItem) {
     Row({ space: 12 }) {
-      RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 10 })
+      RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 14 })
         .width(56)
         .height(56)
 
@@ -72,7 +72,9 @@ export struct LibraryPage {
         .fontColor(['#C7C7CC'])
     }
     .width('100%')
-    .padding({ top: 8, bottom: 8 })
+    .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+    .backgroundColor('#FFFFFF')
+    .borderRadius(16)
     .onClick(() => {
       this.openPlayer(item);
     })
@@ -134,7 +136,7 @@ export struct LibraryPage {
               .fontColor(['#C7C7CC'])
           }
           .width('100%')
-          .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+          .padding({ left: 16, right: 16, top: 14, bottom: 14 })
           .backgroundColor('#FFFFFF')
           .onClick(() => {
             router.pushUrl({ url: 'pages/PlaylistPage', params: { playlistId: item.id, name: item.name } });

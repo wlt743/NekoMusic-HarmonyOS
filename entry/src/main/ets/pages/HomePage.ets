@@ -61,47 +61,58 @@ export struct HomePage {
 
   @Builder
   sectionHeader(title: string) {
-    Row() {
+    Row({ space: 6 }) {
       Text(title)
-        .fontSize(20)
+        .fontSize(22)
         .fontWeight(FontWeight.Bold)
         .fontColor("#1A1A1A")
       Blank()
       Text("更多")
         .fontSize(13)
         .fontColor("#999999")
+      SymbolGlyph($r('sys.symbol.chevron_right'))
+        .fontSize(13)
+        .fontColor(['#BBBBBB'])
     }
     .width("100%")
-    .padding({ left: 16, right: 16, top: 24, bottom: 12 })
+    .padding({ left: 20, right: 20, top: 28, bottom: 14 })
   }
 
   @Builder
   coverCard(item: MusicItem, width: number, source: MusicItem[]) {
-    Column({ space: 8 }) {
-      RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 16 })
+    Column({ space: 0 }) {
+      RemoteImage({ url: MusicService.coverURL(item), cornerRadius: 0 })
         .width(width)
         .height(width)
         .onClick(() => {
           this.openPlayer(item, source);
         })
 
-      Text(item.title)
-        .fontSize(14)
-        .fontWeight(FontWeight.Medium)
-        .fontColor("#1A1A1A")
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .width(width)
+      Column({ space: 5 }) {
+        Text(item.title)
+          .fontSize(14)
+          .fontWeight(FontWeight.Medium)
+          .fontColor("#1A1A1A")
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width("100%")
 
-      Text(item.artist)
-        .fontSize(12)
-        .fontColor("#999999")
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .width(width)
+        Text(item.artist)
+          .fontSize(11)
+          .fontColor("#999999")
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width("100%")
+      }
+      .width("100%")
+      .alignItems(HorizontalAlign.Start)
+      .padding({ left: 12, right: 12, top: 10, bottom: 13 })
     }
     .width(width)
-    .alignItems(HorizontalAlign.Start)
+    .backgroundColor("#FFFFFF")
+    .borderRadius(22)
+    .clip(true)
+    .shadow({ radius: 18, color: "#12000000", offsetY: 6 })
   }
 
   build() {
