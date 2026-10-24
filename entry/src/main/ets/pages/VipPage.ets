@@ -16,6 +16,11 @@ struct VipPage {
   @State private loading: boolean = true;
   @State private selectedId: number = 0;
   @State private message: string = '';
+  @State private showPay: boolean = false;
+  @State private payImage: string = '';
+  @State private payQr: string = '';
+  @State private payUrl: string = '';
+  @State private paying: boolean = false;
 
   aboutToAppear(): void {
     this.load();
@@ -54,12 +59,34 @@ struct VipPage {
     }
   }
 
-  private buy(): void {
+  async startPay(payType: string): Promise<void> {
     if (!AuthService.isLoggedIn()) {
       this.message = '请先登录';
       return;
     }
-    this.message = '华为支付需要先在 AGC 配置商品，暂未开通';
+    this.paying = true;
+    this.message = '';
+    try {
+      const body: string = JSON.stringify({ pricingId: this.selectedId, payType: payType });
+      const text: string = await HttpClient.post(
+        'https://music.nekocore.cn/api/vip/pay/create', body, AuthService.token());
+      const json = JSON.parse(text) as Record<string, Object>;
+      const data = json.data as Record<string, Object> | undefined;
+      if (data === undefined) {
+        this.message = '下单失败';
+        return;
+      }
+      this.payImage = typeof data.img === 'string' ? data.img : '';
+      this.payQr = typeof data.qrcode === 'string' ? data.qrcode : '';
+      this.payUrl = typeof data.payurl === 'string' ? data.payurl : '';
+      this.showPay = true;
+      this.message = '请扫码支付';
+    } catch (error) {
+      const err = error as Error;
+      this.message = err.message;
+    } finally {
+      this.paying = false;
+    }
   }
 
   private label(item: VipPriceItem): string {
@@ -108,7 +135,6 @@ struct VipPage {
       } else {
         Scroll() {
           Column({ space: 12 }) {
-            // 权益卡
             Column({ space: 8 }) {
               Text('会员权益')
                 .fontSize(16)
@@ -128,7 +154,6 @@ struct VipPage {
             .shadow({ radius: 18, color: '#0F000000', offsetY: 6 })
             .alignItems(HorizontalAlign.Start)
 
-            // 价格列表
             ForEach(this.prices, (item: VipPriceItem) => {
               Row({ space: 12 }) {
                 Column({ space: 4 }) {
@@ -159,14 +184,27 @@ struct VipPage {
               })
             }, (item: VipPriceItem) => item.id.toString())
 
-            Button('立即购买')
-              .width('100%')
-              .height(48)
-              .borderRadius(24)
-              .backgroundColor('#E5484D')
-              .onClick(() => {
-                this.buy();
-              })
+            Row({ space: 12 }) {
+              Button('支付宝')
+                .layoutWeight(1)
+                .height(48)
+                .borderRadius(24)
+                .backgroundColor('#1677FF')
+                .enabled(!this.paying)
+                .onClick(() => {
+                  this.startPay('alipay');
+                })
+              Button('微信支付')
+                .layoutWeight(1)
+                .height(48)
+                .borderRadius(24)
+                .backgroundColor('#07C160')
+                .enabled(!this.paying)
+                .onClick(() => {
+                  this.startPay('wxpay');
+                })
+            }
+            .width('100%')
 
             if (this.message.length > 0) {
               Text(this.message)
@@ -178,6 +216,81 @@ struct VipPage {
         }
         .layoutWeight(1)
         .scrollBar(BarState.Off)
+      }
+
+      // 支付弹层
+      if (this.showPay) {
+        Stack({ alignContent: Alignment.Bottom }) {
+          Column()
+            .width('100%')
+            .height('100%')
+            .backgroundColor('#66000000')
+            .onClick(() => {
+              this.showPay = false;
+            })
+
+          Column({ space: 14 }) {
+            Text('扫码支付')
+              .fontSize(18)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#1A1A1A')
+
+            if (this.payImage.length > 0) {
+              Image(this.payImage)
+                .width(220)
+                .height(220)
+                .objectFit(ImageFit.Contain)
+            } else if (this.payQr.length > 0) {
+              Column({ space: 8 }) {
+                Text('二维码内容：')
+                  .fontSize(12)
+                  .fontColor('#999999')
+                Text(this.payQr)
+                  .fontSize(11)
+                  .fontColor('#333333')
+                  .maxLines(4)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+              }
+              .padding(12)
+              .backgroundColor('#F2F2F5')
+              .borderRadius(12)
+            } else if (this.payUrl.length > 0) {
+              Text('支付链接已生成，请在浏览器中打开')
+                .fontSize(13)
+                .fontColor('#666666')
+              Text(this.payUrl)
+                .fontSize(10)
+                .fontColor('#999999')
+                .maxLines(3)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+            } else {
+              Text('未获取到支付信息')
+                .fontSize(13)
+                .fontColor('#999999')
+            }
+
+            Text('支付完成后会员会自动开通')
+              .fontSize(11)
+              .fontColor('#999999')
+
+            Button('关闭')
+              .width('100%')
+              .height(42)
+              .borderRadius(21)
+              .backgroundColor('#F2F2F5')
+              .fontColor('#666666')
+              .onClick(() => {
+                this.showPay = false;
+              })
+          }
+          .width('100%')
+          .padding(24)
+          .backgroundColor('#FFFFFF')
+          .borderRadius({ topLeft: 24, topRight: 24 })
+          .alignItems(HorizontalAlign.Center)
+        }
+        .width('100%')
+        .height('100%')
       }
     }
     .width('100%')
