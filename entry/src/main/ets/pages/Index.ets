@@ -4,11 +4,14 @@ import { HomePage } from "./HomePage";
 import { DiscoverPage } from "./DiscoverPage";
 import { LibraryPage } from "./LibraryPage";
 import { ProfilePage } from "./ProfilePage";
+import { MiniPlayer } from '../components/MiniPlayer';
+import { MusicItem } from '../models/Music';
 
 @Entry
 @Component
 struct Index {
   @State currentIndex: number = 0;
+  @StorageLink('currentMusic') currentMusic: MusicItem | undefined = undefined;
 
   aboutToAppear(): void {
     // 预热 nonce，减少点歌时的等待
@@ -32,6 +35,7 @@ struct Index {
   }
 
   build() {
+    Stack({ alignContent: Alignment.Bottom }) {
     HdsTabs({ barPosition: BarPosition.End, index: this.currentIndex }) {
       TabContent() {
         HomePage()
@@ -60,5 +64,14 @@ struct Index {
     .width("100%")
     .height("100%")
     .backgroundColor("#F5F6F8")
+
+    // 悬浮迷你播放条
+    if (this.currentMusic !== undefined) {
+      MiniPlayer()
+        .margin({ left: 12, right: 12, bottom: 88 })
+    }
+    }
+    .width("100%")
+    .height("100%")
   }
 }
