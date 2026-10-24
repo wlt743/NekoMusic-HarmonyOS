@@ -97,15 +97,8 @@ export struct LibraryPage {
         .width('100%')
         .height(200)
         .justifyContent(FlexAlign.Center)
-      } else if (this.favorites.length === 0) {
-        Column({ space: 8 }) {
-          Text('还没有收藏歌曲').fontSize(14).fontColor('#999999')
-        }
-        .width('100%')
-        .height(200)
-        .justifyContent(FlexAlign.Center)
       } else {
-        // 我的歌单
+        // 我的歌单（始终显示）
         Row() {
           Text('我的歌单 (' + this.playlists.length + ')')
             .fontSize(13)
@@ -148,7 +141,7 @@ export struct LibraryPage {
           })
         }, (item: PlaylistInfo) => item.id.toString())
 
-        Blank().height(8)
+        Blank().height(12)
 
         Text('我喜欢的音乐 (' + this.favorites.length + ')')
           .fontSize(13)
@@ -156,17 +149,26 @@ export struct LibraryPage {
           .width('100%')
           .padding({ left: 16, top: 8, bottom: 4 })
 
-        List({ space: 4 }) {
-          ForEach(this.favorites, (item: MusicItem) => {
-            ListItem() {
-              this.songRow(item)
-            }
-          }, (item: MusicItem) => item.id.toString())
+        if (this.favorites.length === 0) {
+          Column() {
+            Text('还没有收藏歌曲').fontSize(14).fontColor('#999999')
+          }
+          .width('100%')
+          .height(120)
+          .justifyContent(FlexAlign.Center)
+        } else {
+          List({ space: 4 }) {
+            ForEach(this.favorites, (item: MusicItem) => {
+              ListItem() {
+                this.songRow(item)
+              }
+            }, (item: MusicItem) => item.id.toString())
+          }
+          .width('100%')
+          .layoutWeight(1)
+          .padding({ left: 16, right: 16 })
+          .divider({ strokeWidth: 0.5, color: '#EEEEEE', startMargin: 68, endMargin: 0 })
         }
-        .width('100%')
-        .layoutWeight(1)
-        .padding({ left: 16, right: 16 })
-        .divider({ strokeWidth: 0.5, color: '#EEEEEE', startMargin: 68, endMargin: 0 })
       }
     }
     .width('100%')

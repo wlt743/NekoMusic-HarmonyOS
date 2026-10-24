@@ -13,8 +13,23 @@ export struct HomePage {
   @State loading: boolean = true;
   @State errorText: string = "";
   @StorageLink("wallpaperUri") wallpaperUri: string = "";
+  @StorageLink("authToken") authToken: string = "";
+  @State dailyList: MusicItem[] = [];
+
+  async loadDaily(): Promise<void> {
+    if (this.authToken.length === 0) {
+      return;
+    }
+    try {
+      const list: MusicItem[] = await MusicService.dailyRecommend(this.authToken);
+      this.dailyList = list;
+    } catch (error) {
+      this.dailyList = [];
+    }
+  }
 
   aboutToAppear(): void {
+    this.loadDaily();
     this.loadData();
   }
 

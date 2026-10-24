@@ -56,6 +56,29 @@ export class MusicService {
     return json.data.lyrics ?? "";
   }
 
+  /** 每日推荐：返回项只有 musicId，需要映射 */
+  static async dailyRecommend(token: string): Promise<MusicItem[]> {
+    const text: string = await HttpClient.get(APIConfig.dailyRecommendURL(), token);
+    const json = JSON.parse(text) as Record<string, Object>;
+    const list = json.data as Record<string, Object>[] | undefined;
+    const result: MusicItem[] = [];
+    if (list !== undefined) {
+      for (const item of list) {
+        const musicId = item.musicId;
+        if (typeof musicId === "number") {
+          const titleValue = item.title;
+          const artistValue = item.artist;
+          result.push({
+            id: musicId,
+            title: typeof titleValue === "string" ? titleValue : "",
+            artist: typeof artistValue === "string" ? artistValue : ""
+          });
+        }
+      }
+    }
+    return result;
+  }
+
   /** 封面完整地址 */
   static coverURL(item: MusicItem): string {
     if (item.coverUrl !== undefined && item.coverUrl.length > 0) {
