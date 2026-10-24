@@ -202,6 +202,17 @@ export struct ProfilePage {
 
       Blank().height(14)
 
+      // 会员入口
+      Column() {
+        this.settingRow('会员中心', '无损音质、专属标识', () => {
+          router.pushUrl({ url: 'pages/VipPage' });
+        })
+      }
+      .borderRadius(22)
+      .clip(true)
+      .shadow({ radius: 18, color: '#0F000000', offsetY: 6 })
+      .margin({ bottom: 14 })
+
       // 站内消息入口
       Column() {
         this.settingRow('站内消息',

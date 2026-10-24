@@ -6,6 +6,7 @@
     "pages/SettingsPage",
     "pages/CommentsPage",
     "pages/UploadPage",
-    "pages/MessagesPage"
+    "pages/MessagesPage",
+    "pages/VipPage"
   ]
 }
