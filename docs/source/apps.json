@@ -2,7 +2,7 @@
   "name": "NekoMusic HarmonyOS",
   "identifier": "com.wlt743.nekomusic.harmonyos.source",
   "subtitle": "为你的 HarmonyOS 设备准备好 NekoMusic",
-  "description": "NekoMusic 的 HarmonyOS 原生客户端。本源码库只分发自己构建的版本，不含任何音源；曲库、账号、歌单全部由后端提供。",
+  "description": "NekoMusic 的 HarmonyOS 原生客户端。本源码库只分发自己构建的版本，不含任何音源。",
   "iconURL": "https://raw.githubusercontent.com/wlt743/NekoMusic-HarmonyOS/main/docs/images/home.jpeg",
   "headerURL": "https://raw.githubusercontent.com/wlt743/NekoMusic-HarmonyOS/main/docs/images/home.jpeg",
   "website": "https://github.com/wlt743/NekoMusic-HarmonyOS",
@@ -13,7 +13,7 @@
       "bundleIdentifier": "com.example.nekomusicharmony",
       "developerName": "wlt743",
       "subtitle": "第三方音乐播放器客户端",
-      "localizedDescription": "ArkTS + ArkUI 原生实现：推荐与排行榜、搜索、逐行滚动歌词、媒体会话、实况窗歌词、折叠屏两栏、四方向旋转、收藏歌单、评论、站内消息、上传音乐、会员中心。",
+      "localizedDescription": "ArkTS + ArkUI 原生实现：推荐与排行榜、搜索、逐行歌词、媒体会话、实况窗歌词、折叠屏两栏、四方向旋转。",
       "iconURL": "https://raw.githubusercontent.com/wlt743/NekoMusic-HarmonyOS/main/docs/images/home.jpeg",
       "tintColor": "#FF2D55",
       "category": "music",
@@ -21,7 +21,7 @@
         {
           "version": "7.1.0",
           "date": "2026-10-25",
-          "downloadURL": "https://github.com/wlt743/NekoMusic-HarmonyOS/releases/download/v7.1.0/NekoMusicHarmony-7.1.0-release.hap",
+          "downloadURL": "https://github.com/wlt743/NekoMusic-HarmonyOS/releases/download/7.1.0/NekoMusic-harmonyos-7.1.0.hap",
           "size": 896932,
           "minOSVersion": "6.1.0"
         }
